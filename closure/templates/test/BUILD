@@ -205,3 +205,26 @@ closure_js_test(
         "//closure/library/testing:testsuite",
     ],
 )
+
+################################################################################
+# Translated messages can be defined in xlf files
+
+closure_js_template_library(
+    name = "messages_soy_bg",
+    srcs = [
+        "messages.soy",
+        "translated_msgs_bg.xlf",
+    ],
+    locale = "bg",
+    message_file_path_format = "closure/templates/test/translated_msgs_{LOCALE}.xlf",
+)
+
+closure_js_test(
+    name = "messages_test",
+    srcs = ["messages_test.js"],
+    deps = [
+        ":messages_soy_bg",
+        "//closure/library",
+        "//closure/library:testing",
+    ],
+)

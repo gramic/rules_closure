@@ -23,12 +23,22 @@ load("//closure/templates:closure_templates_plugin.bzl", "SoyPluginInfo")
 _SOYTOJSSRCCOMPILER = "@com_google_template_soy//:SoyToJsSrcCompiler"
 
 def _impl(ctx):
-    args = ["--outputPathFormat=%s/{INPUT_DIRECTORY}/{INPUT_FILE_NAME}.js" %
-            ctx.configuration.genfiles_dir.path]
+    if ctx.attr.locale:
+        if not ctx.attr.message_file_path_format:
+            fail("message_file_path_format must be used when using locale")
+        args = ["--outputPathFormat=%s/{INPUT_DIRECTORY}/{INPUT_FILE_NAME}_{LOCALE}.js" %
+                ctx.configuration.genfiles_dir.path]
+    else:
+        args = ["--outputPathFormat=%s/{INPUT_DIRECTORY}/{INPUT_FILE_NAME}.js" %
+                ctx.configuration.genfiles_dir.path]
     if ctx.attr.soy_msgs_are_external:
         args += ["--googMsgsAreExternal"]
     if ctx.attr.should_generate_soy_msg_defs:
         args += ["--shouldGenerateGoogMsgDefs"]
+    if ctx.attr.locale:
+        args += ["--locales=%s" % ctx.attr.locale]
+    if ctx.attr.message_file_path_format:
+        args += ["--messageFilePathFormat={}".format(ctx.attr.message_file_path_format)]
     if ctx.attr.bidi_global_dir:
         args += ["--bidiGlobalDir=%s" % ctx.attr.bidi_global_dir]
     if ctx.attr.plugins:
@@ -42,8 +52,11 @@ def _impl(ctx):
         args += [arg]
     inputs = []
     for f in ctx.files.srcs:
-        args.append("--srcs=" + f.path)
-        inputs.append(f)
+        if f.path.endswith(".soy"):
+            args.append("--srcs=%s" % f.path)
+            inputs.append(f)
+        else:
+            inputs.append(f)
     if ctx.file.globals:
         args += ["--compileTimeGlobalsFile", ctx.file.globals.path]
         inputs.append(ctx.file.globals)
@@ -73,8 +86,6 @@ def _impl(ctx):
     )
 
 _closure_js_template_library = rule(
-    implementation = _impl,
-    output_to_genfiles = True,
     attrs = {
         "srcs": attr.label_list(allow_files = SOY_FILE_TYPE),
         "deps": attr.label_list(
@@ -90,8 +101,12 @@ _closure_js_template_library = rule(
         "bidi_global_dir": attr.int(default = 1, values = [1, -1]),
         "soy_msgs_are_external": attr.bool(),
         "compiler": attr.label(cfg = "host", executable = True, mandatory = True),
+        "locale": attr.string(),
+        "message_file_path_format": attr.string(),
         "defs": attr.string_list(),
     },
+    output_to_genfiles = True,
+    implementation = _impl,
 )
 
 def closure_js_template_library(
@@ -106,16 +121,18 @@ def closure_js_template_library(
         bidi_global_dir = None,
         soy_msgs_are_external = None,
         defs = [],
+        locale = None,
+        message_file_path_format = None,
         **kwargs):
+    js_srcs = []
     compiler = str(Label(_SOYTOJSSRCCOMPILER))
-    js_srcs = [src + ".js" for src in srcs]
+    locale_js_extension = ".js" if not locale else "_%s.js" % locale
+    js_srcs = [src + locale_js_extension for src in srcs if src.endswith(".soy")]
     _closure_js_template_library(
         name = name + "_soy_js",
-        srcs = srcs,
-        deps = deps,
-        outputs = js_srcs,
         testonly = testonly,
-        visibility = ["//visibility:private"],
+        srcs = srcs,
+        compiler = compiler,
         globals = globals,
         plugins = plugins,
         should_generate_soy_msg_defs = should_generate_soy_msg_defs,
@@ -123,6 +140,8 @@ def closure_js_template_library(
         soy_msgs_are_external = soy_msgs_are_external,
         compiler = compiler,
         defs = defs,
+        locale = locale,
+        message_file_path_format = message_file_path_format,
     )
 
     deps = deps + [

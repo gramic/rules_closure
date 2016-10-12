@@ -775,6 +775,7 @@ def com_google_template_soy():
              "    runtime_deps = [\":com_google_template_soy\"],\n" +
              ")\n") % (name, name)
             for name in (
+                "SoyMsgExtractor",
                 "SoyParseInfoGenerator",
                 "SoyToJbcSrcCompiler",
                 "SoyToJsSrcCompiler",
