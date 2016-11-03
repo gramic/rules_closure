@@ -70,6 +70,16 @@ java_binary(
 )
 
 java_binary(
+    name = "SoyMsgExtractor",
+    jvm_flags = ["-client"],
+    main_class = "com.google.template.soy.SoyMsgExtractor",
+    runtime_deps = [
+        ":soy",
+        "@args4j//jar",
+    ],
+)
+
+java_binary(
     name = "SoyToPySrcCompiler",
     jvm_flags = ["-client"],
     main_class = "com.google.template.soy.SoyToPySrcCompiler",

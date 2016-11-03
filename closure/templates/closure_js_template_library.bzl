@@ -35,11 +35,17 @@ def _impl(ctx):
       fail('should_generate_soy_msg_defs must be 0 when using incremental_dom')
     if ctx.attr.soy_msgs_are_external:
       fail('soy_msgs_are_external must be 0 when using incremental_dom')
+    if ctx.attr.message_file_path_format:
+      fail('message_file_path_format must be empty when using incremental_dom')
     args = ["--outputPathFormat=%s/{INPUT_DIRECTORY}/{INPUT_FILE_NAME}_idom.js" %
             ctx.configuration.genfiles_dir.path]
   else:
-    args = ["--outputPathFormat=%s/{INPUT_DIRECTORY}/{INPUT_FILE_NAME}.js" %
-            ctx.configuration.genfiles_dir.path]
+    if locale:
+      args = ["--outputPathFormat=%s/{INPUT_DIRECTORY}/{INPUT_FILE_NAME}_{LOCALE}.js" %
+              ctx.configuration.genfiles_dir.path]
+    else:
+      args = ["--outputPathFormat=%s/{INPUT_DIRECTORY}/{INPUT_FILE_NAME}.js" %
+              ctx.configuration.genfiles_dir.path]
 
   if not ctx.attr.incremental_dom:
     if ctx.attr.soy_msgs_are_external:
@@ -50,9 +56,13 @@ def _impl(ctx):
       args += ["--shouldProvideRequireSoyNamespaces"]
     if ctx.attr.should_generate_soy_msg_defs:
       args += ["--shouldGenerateGoogMsgDefs"]
+    if ctx.attr.locale:
+      args += ["--locales=%s".format(ctx.attr.locale)]
+    if ctx.attr.message_file_path_format:
+      args += ["--messageFilePathFormat={}".format(ctx.attr.message_file_path_format)]
   if ctx.attr.plugin_modules:
     args += ["--pluginModules=%s" % ",".join(ctx.attr.plugin_modules)]
-  args += [src.path for src in ctx.files.srcs]
+  args += [src.path for src in ctx.files.srcs if src.path.endswith(".soy")]
   srcs = ctx.files.srcs[:]
   if ctx.file.globals:
     args += ["--compileTimeGlobalsFile=%s" % ctx.file.globals.path]
@@ -87,6 +97,8 @@ _closure_js_template_library = rule(
         "should_provide_require_soy_namespaces": attr.bool(default=True),
         "should_generate_soy_msg_defs": attr.bool(),
         "soy_msgs_are_external": attr.bool(),
+        "locale": attr.string(),
+        "message_file_path_format": attr.string(),
         "incremental_dom": attr.bool(),
         "compiler": attr.label(cfg="host", executable=True, mandatory=True),
     },
@@ -104,13 +116,17 @@ def closure_js_template_library(
     should_provide_require_soy_namespaces = None,
     should_generate_soy_msg_defs = None,
     soy_msgs_are_external = None,
+    locale = None,
+    message_file_path_format = None,
     **kwargs):
+  js_srcs = []
   if incremental_dom:
     compiler = str(Label(_SOYTOINCREMENTALDOMSRCCOMPILER))
     js_srcs = [src + "_idom.js" for src in srcs]
   else:
     compiler = str(Label(_SOYTOJSSRCCOMPILER))
-    js_srcs = [src + ".js" for src in srcs]
+    locale_js_extension = ".js" if not locale else "_%s.js" % locale
+    js_srcs = [src + locale_js_extension for src in srcs if src.endswith(".soy")]
   _closure_js_template_library(
       name = name + "_soy_js",
       srcs = srcs,
@@ -124,6 +140,8 @@ def closure_js_template_library(
       should_provide_require_soy_namespaces = should_provide_require_soy_namespaces,
       should_generate_soy_msg_defs = should_generate_soy_msg_defs,
       soy_msgs_are_external = soy_msgs_are_external,
+      locale = locale,
+      message_file_path_format = message_file_path_format,
       incremental_dom = incremental_dom,
       compiler = compiler,
   )
