@@ -86,6 +86,8 @@ def _impl(ctx):
     )
 
 _closure_js_template_library = rule(
+    implementation = _impl,
+    output_to_genfiles = True,
     attrs = {
         "srcs": attr.label_list(allow_files = SOY_FILE_TYPE),
         "deps": attr.label_list(
@@ -105,8 +107,6 @@ _closure_js_template_library = rule(
         "message_file_path_format": attr.string(),
         "defs": attr.string_list(),
     },
-    output_to_genfiles = True,
-    implementation = _impl,
 )
 
 def closure_js_template_library(
