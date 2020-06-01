@@ -130,9 +130,11 @@ def closure_js_template_library(
     js_srcs = [src + locale_js_extension for src in srcs if src.endswith(".soy")]
     _closure_js_template_library(
         name = name + "_soy_js",
-        testonly = testonly,
         srcs = srcs,
-        compiler = compiler,
+        deps = deps,	
+        outputs = js_srcs,
+        testonly = testonly,
+        visibility = ["//visibility:private"],
         globals = globals,
         plugins = plugins,
         should_generate_soy_msg_defs = should_generate_soy_msg_defs,
