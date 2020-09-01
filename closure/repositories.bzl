@@ -654,7 +654,7 @@ def com_google_java_format():
     )
 
 def com_google_javascript_closure_compiler():
-    version = "v20200406"
+    version = "v20200614"
     jar = "closure-compiler-unshaded-%s.jar" % version
     java_import_external(
         name = "com_google_javascript_closure_compiler",
@@ -663,7 +663,7 @@ def com_google_javascript_closure_compiler():
             "https://mirror.bazel.build/repo1.maven.org/maven2/com/google/javascript/closure-compiler-unshaded/%s/%s" % (version, jar),
             "https://repo1.maven.org/maven2/com/google/javascript/closure-compiler-unshaded/%s/%s" % (version, jar),
         ],
-        jar_sha256 = "887aa0728b3a9c1d281f53f0a282b39ecc364870a84361cd66c955cdab58cd62",
+        jar_sha256 = "d2ad499608b55c08459de3a722fcf77230773b8a0c1d2809abb5e6fb25571c0f",
         deps = [
             "@com_google_code_gson",
             "@com_google_guava",
@@ -745,10 +745,10 @@ def com_google_template_soy():
         name = "com_google_template_soy",
         licenses = ["notice"],  # Apache 2.0
         jar_urls = [
-            "https://mirror.bazel.build/repo1.maven.org/maven2/com/google/template/soy/2019-07-14/soy-2019-07-14.jar",
-            "https://repo1.maven.org/maven2/com/google/template/soy/2019-07-14/soy-2019-07-14.jar",
+            "https://mirror.bazel.build/repo1.maven.org/maven2/com/google/template/soy/2020-08-24/soy-2020-08-24.jar",
+            "https://repo1.maven.org/maven2/com/google/template/soy/2020-08-24/soy-2020-08-24.jar",
         ],
-        jar_sha256 = "981d9f6180b40eb340f53d20aa1af630139ea079f95a3441265e87d8c850a527",
+        jar_sha256 = "60c59b9f5d3074b5b72b18f00efd4c96d10deb0693a16f40ce538657c51f63a4",
         deps = [
             "@args4j",
             "@com_google_code_findbugs_jsr305",
